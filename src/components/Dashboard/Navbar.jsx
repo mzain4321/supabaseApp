@@ -13,7 +13,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="text-2xl font-bold bg-gradient-to-r from-instagram-purple to-instagram-pink bg-clip-text text-blue-600">
-              SociaApp
+              SocialApp
             </div>
           </Link>
 
