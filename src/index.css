@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 @tailwind base;
@@ -13,7 +12,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-instagram-purple to-instagram-pink text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity;
+    @apply bg-gradient-to-r from-purple-500 via-pink-500 to-pink-400 text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity;
   }
   
   .btn-secondary {
@@ -21,13 +20,10 @@
   }
   
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-instagram-blue focus:border-transparent;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
   }
   
   .card {
     @apply bg-white rounded-xl shadow-md p-4;
   }
 }
-
-
-
