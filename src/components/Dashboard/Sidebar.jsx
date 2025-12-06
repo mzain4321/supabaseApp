@@ -127,72 +127,10 @@ const Sidebar = () => {
       </div>
 
       {/* User Profile Summary */}
-      {profile && (
-        <div className="card">
-          <div className="flex items-center space-x-3 mb-4">
-            <img
-              src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.full_name}&background=random`}
-              alt={profile.username}
-              className="h-12 w-12 rounded-full object-cover"
-            />
-            <div className="flex-1">
-              <div className="font-semibold">{profile.username}</div>
-              <div className="text-sm text-gray-500">{profile.full_name}</div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 text-center border-t pt-4">
-            <div>
-              <div className="font-bold text-lg">0</div>
-              <div className="text-xs text-gray-500">Posts</div>
-            </div>
-            <div>
-              <div className="font-bold text-lg">0</div>
-              <div className="text-xs text-gray-500">Followers</div>
-            </div>
-            <div>
-              <div className="font-bold text-lg">0</div>
-              <div className="text-xs text-gray-500">Following</div>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* Who to Follow */}
-      {suggestions.length > 0 && (
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Suggestions For You</h3>
-            <Users className="h-5 w-5 text-gray-400" />
-          </div>
-          
-          <div className="space-y-4">
-            {suggestions.map((user) => (
-              <div key={user.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-instagram-purple to-instagram-pink flex items-center justify-center text-white text-sm font-semibold">
-                    {user.username?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="max-w-[120px]">
-                    <div className="font-medium text-sm truncate">{user.username}</div>
-                    <div className="text-xs text-gray-500 truncate">Suggested for you</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleFollow(user.id)}
-                  className="text-xs btn-primary px-2 py-1"
-                >
-                  Follow
-                </button>
-              </div>
-            ))}
-          </div>
-          
-          <button className="w-full mt-4 text-instagram-blue hover:underline text-sm font-medium">
-            See All
-          </button>
-        </div>
-      )}
+     
 
 
       
