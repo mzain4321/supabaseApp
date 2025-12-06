@@ -2,16 +2,20 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        "instagram-purple": "#833AB4",
-        "instagram-pink": "#E1306C",
-        "instagram-orange": "#F77737",
-      },
+        instagram: {
+          pink: '#E1306C',
+          purple: '#833AB4',
+          yellow: '#FCAF45',
+          orange: '#FD1D1D',
+          blue: '#405DE6',
+        }
+      }
     },
   },
   plugins: [],
-};
+}
