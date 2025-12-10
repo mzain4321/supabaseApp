@@ -154,7 +154,7 @@ const CreatePost = ({ onClose, onSuccess }) => {
                 type="button"
                 className="mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
               >
-                Select from computer
+                Select from your device
               </button>
             </div>
           ) : (
