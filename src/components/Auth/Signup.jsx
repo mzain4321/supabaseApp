@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import toast from 'react-hot-toast'
-import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+// src/pages/Signup.jsx
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
+import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -11,80 +12,72 @@ const Signup = () => {
     confirmPassword: '',
     username: '',
     fullName: '',
-  })
-  const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const { signUp } = useAuth()
-  const navigate = useNavigate()
+    agreeTerms: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
 
+  // Client-side validation
   const validateForm = () => {
-    const newErrors = {}
-    
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address'
-    }
-    
-    // Username validation
-    if (!formData.username) {
-      newErrors.username = 'Username is required'
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters'
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, and underscores'
-    }
-    
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required'
-    }
-    
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-    
-    // Confirm password validation
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    const newErrors = {};
+
+    // Email
+    if (!formData.email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = 'Please enter a valid email address';
+
+    // Username
+    if (!formData.username) newErrors.username = 'Username is required';
+    else if (formData.username.length < 3)
+      newErrors.username = 'Username must be at least 3 characters';
+    else if (!/^[a-zA-Z0-9_]+$/.test(formData.username))
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+
+    // Full Name
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+
+    // Password
+    if (!formData.password) newErrors.password = 'Password is required';
+    else if (formData.password.length < 6)
+      newErrors.password = 'Password must be at least 6 characters';
+
+    // Confirm Password
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = 'Passwords do not match';
+
+    // Terms agreement
+    if (!formData.agreeTerms)
+      newErrors.agreeTerms = 'You must agree to the Terms of Service';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-    
-    // Clear error when user starts typing
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
+    e.preventDefault();
     if (!validateForm()) {
-      toast.error('Please fix the errors in the form')
-      return
+      toast.error('Please fix the errors in the form');
+      return;
     }
 
-    setLoading(true)
-    setErrors({})
+    setLoading(true);
+    setErrors({});
 
     try {
       const { error } = await signUp(
@@ -92,58 +85,48 @@ const Signup = () => {
         formData.password,
         formData.username.trim().toLowerCase(),
         formData.fullName.trim()
-      )
+      );
 
       if (error) {
-        // Handle specific error messages
-        let errorMessage = error
-        
-        if (error.includes('already registered')) {
-          errorMessage = 'This email is already registered. Please try logging in.'
-          setErrors(prev => ({ ...prev, email: errorMessage }))
-        } else if (error.includes('username')) {
-          errorMessage = 'Username is already taken. Please choose another.'
-          setErrors(prev => ({ ...prev, username: errorMessage }))
-        } else if (error.includes('password')) {
-          errorMessage = 'Password is too weak. Please choose a stronger password.'
-          setErrors(prev => ({ ...prev, password: errorMessage }))
-        }
-        
-        toast.error(errorMessage)
+        let errorMessage = error;
+
+        if (error === 'email_registered')
+          errorMessage = 'This email is already registered. Please login.';
+        else if (error === 'username_taken')
+          errorMessage = 'Username is already taken. Please choose another.';
+        else if (error === 'weak_password')
+          errorMessage = 'Password is too weak. Please choose a stronger password.';
+
+        // Map error to specific fields
+        if (error === 'email_registered') setErrors({ email: errorMessage });
+        else if (error === 'username_taken') setErrors({ username: errorMessage });
+        else if (error === 'weak_password') setErrors({ password: errorMessage });
+
+        toast.error(errorMessage);
       } else {
-        toast.success('Account created successfully! Welcome!', {
-          duration: 5000,
-          icon: '🎉'
-        })
-        
-        // Navigate to dashboard after successful signup
-        setTimeout(() => {
-          navigate('/')
-        }, 1500)
+        toast.success('Account created successfully! Welcome 🎉', { duration: 5000 });
+        setTimeout(() => navigate('/login'), 1500);
       }
     } catch (err) {
-      console.error('Unexpected error:', err)
-      toast.error('An unexpected error occurred. Please try again.')
+      console.error('Unexpected error:', err);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Password requirements helper
   const PasswordRequirements = () => (
-    <div className="mt-2 space-y-1 text-sm">
+    <div className="mt-2 text-sm space-y-1">
       <p className="font-medium text-gray-700">Password must:</p>
-      <ul className="space-y-1 text-gray-600">
+      <ul className="text-gray-600 space-y-1">
         <li className={`flex items-center ${formData.password.length >= 6 ? 'text-green-600' : ''}`}>
-          {formData.password.length >= 6 ? (
-            <CheckCircle className="h-4 w-4 mr-2" />
-          ) : (
-            <AlertCircle className="h-4 w-4 mr-2" />
-          )}
-          Be at least 6 characters long
+          {formData.password.length >= 6 ? <CheckCircle className="h-4 w-4 mr-2" /> : <AlertCircle className="h-4 w-4 mr-2" />}
+          Be at least 6 characters
         </li>
       </ul>
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-instagram-blue to-instagram-purple p-4">
@@ -161,9 +144,7 @@ const Signup = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Full Name
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">Full Name</label>
             <input
               type="text"
               name="fullName"
@@ -175,21 +156,16 @@ const Signup = () => {
             />
             {errors.fullName && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.fullName}
+                <AlertCircle className="h-4 w-4 mr-1" /> {errors.fullName}
               </p>
             )}
           </div>
 
           {/* Username */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Username
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">Username</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                @
-              </span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
               <input
                 type="text"
                 name="username"
@@ -202,17 +178,14 @@ const Signup = () => {
             </div>
             {errors.username && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.username}
+                <AlertCircle className="h-4 w-4 mr-1" /> {errors.username}
               </p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Email
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">Email</label>
             <input
               type="email"
               name="email"
@@ -224,17 +197,14 @@ const Signup = () => {
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.email}
+                <AlertCircle className="h-4 w-4 mr-1" /> {errors.email}
               </p>
             )}
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Password
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -255,8 +225,7 @@ const Signup = () => {
             </div>
             {errors.password && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.password}
+                <AlertCircle className="h-4 w-4 mr-1" /> {errors.password}
               </p>
             )}
             <PasswordRequirements />
@@ -264,9 +233,7 @@ const Signup = () => {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-gray-700 mb-2 font-medium">
-              Confirm Password
-            </label>
+            <label className="block text-gray-700 mb-2 font-medium">Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -287,32 +254,33 @@ const Signup = () => {
             </div>
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-1" />
-                {errors.confirmPassword}
+                <AlertCircle className="h-4 w-4 mr-1" /> {errors.confirmPassword}
               </p>
             )}
           </div>
 
-          {/* Terms Agreement */}
+          {/* Terms */}
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
-              id="terms"
-              required
+              name="agreeTerms"
+              checked={formData.agreeTerms}
+              onChange={handleChange}
               className="h-4 w-4 text-instagram-blue rounded focus:ring-instagram-blue"
               disabled={loading}
             />
-            <label htmlFor="terms" className="text-sm text-gray-600">
+            <label className="text-sm text-gray-600">
               I agree to the{' '}
-              <a href="#" className="text-instagram-blue hover:underline">
-                Terms of Service
-              </a>{' '}
+              <a href="#" className="text-instagram-blue hover:underline">Terms of Service</a>{' '}
               and{' '}
-              <a href="#" className="text-instagram-blue hover:underline">
-                Privacy Policy
-              </a>
+              <a href="#" className="text-instagram-blue hover:underline">Privacy Policy</a>
             </label>
           </div>
+          {errors.agreeTerms && (
+            <p className="text-sm text-red-600 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-1" /> {errors.agreeTerms}
+            </p>
+          )}
 
           {/* Submit Button */}
           <button
@@ -331,40 +299,16 @@ const Signup = () => {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="mt-6 flex items-center">
-          <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-gray-500 text-sm">OR</span>
-          <div className="flex-1 border-t border-gray-300"></div>
-        </div>
-
         {/* Login Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Already have an account?{' '}
-            <Link 
-              to="/login" 
-              className="text-instagram-blue hover:underline font-medium"
-            >
-              Sign in
-            </Link>
+            <Link to="/login" className="text-instagram-blue hover:underline font-medium">Sign in</Link>
           </p>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2 font-medium">
-            For testing purposes:
-          </p>
-          <div className="text-xs text-gray-500 space-y-1">
-            <p>• Use a valid email format</p>
-            <p>• Password must be 6+ characters</p>
-            <p>• Username must be 3+ characters</p>
-          </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Signup
+export default Signup;

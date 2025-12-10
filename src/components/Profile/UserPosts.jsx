@@ -11,7 +11,6 @@ const UserPosts = ({ userId }) => {
   useEffect(() => {
     fetchPosts()
   }, [userId, activeTab])
-
   const fetchPosts = async () => {
     try {
       setLoading(true)

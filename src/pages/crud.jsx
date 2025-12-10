@@ -1,16 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+const SUPABASE_PROJECT_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const EDGE_FUNCTION_URL = `${SUPABASE_PROJECT_URL}/functions/v1/profile-crud`; 
+
 
 export const CRUD = () => {
   const [profiles, setProfiles] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [editingId, setEditingId] = useState(null); 
+  const [editingId, setEditingId] = useState(null);
+
+
+  const callEdgeFunction = async (method, body = null, id = null) => {
+    let url = EDGE_FUNCTION_URL;
+    let headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    };
+
+    if (id && method === 'DELETE') {
+        url = `${EDGE_FUNCTION_URL}?id=${id}`;
+    }
+
+    const config = {
+      method: method,
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined,
+    };
+
+    const response = await fetch(url, config);
+    
+    const data = response.status === 200 || response.status === 201 || response.status === 409 ? await response.json() : null;
+    
+    if (!response.ok) {
+        const errorMsg = data?.message || `HTTP error! Status: ${response.status}`;
+        throw new Error(errorMsg);
+    }
+    
+    return data;
+  };
 
   const fetchProfiles = async () => {
-    const { data, error } = await supabase.from("profile1").select("*");
-    if (error) alert("Error: " + error.message);
-    else setProfiles(data);
+    try {
+      const data = await callEdgeFunction("GET");
+      setProfiles(data);
+    } catch (error) {
+      alert("Error fetching profiles: " + error.message);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -20,41 +56,33 @@ export const CRUD = () => {
       alert("Please provide both name and email.");
       return;
     }
-console.log(name, email);
-    if (editingId) {
-      const { data, error } = await supabase
-        .from("profile1")
-        .update({ name, email })
-        .eq("id", editingId);
-      if (error) alert("Error: " + error.message);
-      else {
+
+    try {
+      if (editingId) {
+        // Update (PATCH)
+        await callEdgeFunction("PATCH", { id: editingId, name, email });
         alert("Updated Successfully!");
-        setName("");
-        setEmail("");
-        setEditingId(null);
-        fetchProfiles();
-      }
-    } else {
-
-      const emailExists = profiles.some((p) => p.email === email);
-      if (emailExists) {
-        alert("This email already exists!");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profile1")
-        .insert([{ name, email }]);
-      if (error) alert("Error: " + error.message);
-      else {
+      } else {
+        // Create (POST)
+        await callEdgeFunction("POST", { name, email });
         alert("Inserted Successfully!");
-        setName("");
-        setEmail("");
-        fetchProfiles();
       }
+
+      // Reset form and refresh table
+      setName("");
+      setEmail("");
+      setEditingId(null);
+      fetchProfiles();
+
+    } catch (error) {
+        // Check for specific error status from Edge Function (e.g., 409 Conflict for duplicate email)
+        if (error.message.includes("Email already exists")) {
+            alert("This email already exists!");
+        } else {
+            alert("Operation failed: " + error.message);
+        }
     }
   };
-
 
   const startEdit = (profile) => {
     setName(profile.name);
@@ -62,11 +90,15 @@ console.log(name, email);
     setEditingId(profile.id);
   };
 
-
+  // DELETE Operation (DELETE)
   const deleteProfile = async (id) => {
-    const { error } = await supabase.from("profile1").delete().eq("id", id);
-    if (error) alert("Error: " + error.message);
-    else fetchProfiles();
+    try {
+      await callEdgeFunction("DELETE", null, id);
+      alert("Deleted Successfully!");
+      fetchProfiles();
+    } catch (error) {
+      alert("Error deleting profile: " + error.message);
+    }
   };
 
   useEffect(() => {
@@ -75,7 +107,9 @@ console.log(name, email);
 
   return (
     <section className="min-h-screen bg-gray-100 flex flex-col items-center p-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">CRUD Operations</h1>
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">
+        CRUD Operations (via Edge Function)
+      </h1>
 
       <div className="w-full max-w-lg bg-white p-6 rounded-lg shadow-md mb-10">
         <h2 className="text-xl font-semibold mb-4 text-gray-700">
@@ -105,23 +139,36 @@ console.log(name, email);
         </form>
       </div>
 
-
       <div className="w-full max-w-3xl overflow-x-auto">
         <table className="min-w-full bg-white rounded-lg shadow-md mb-4">
           <thead className="bg-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">ID</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Name</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-700">Actions</th>
+              <th className="px-6 py-3 text-left font-medium text-gray-700">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left font-medium text-gray-700">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left font-medium text-gray-700">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left font-medium text-gray-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {profiles.map((prof) => (
               <tr key={prof.id}>
-                <td className="px-6 py-4 border-t border-gray-200">{prof.id}</td>
-                <td className="px-6 py-4 border-t border-gray-200">{prof.name}</td>
-                <td className="px-6 py-4 border-t border-gray-200">{prof.email}</td>
+                <td className="px-6 py-4 border-t border-gray-200">
+                  {prof.id}
+                </td>
+                <td className="px-6 py-4 border-t border-gray-200">
+                  {prof.name}
+                </td>
+                <td className="px-6 py-4 border-t border-gray-200">
+                  {prof.email}
+                </td>
                 <td className="px-6 py-4 border-t border-gray-200 flex gap-2">
                   <button
                     onClick={() => startEdit(prof)}
