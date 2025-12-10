@@ -112,7 +112,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center">
             <Instagram className="h-8 w-8 text-pink-600" />
             <span className="ml-2 text-xl font-logo font-bold hidden md:inline">
-              InstaClone
+              SocialAPP
             </span>
           </Link>
 
